@@ -92,17 +92,15 @@ class Scheduler {
 
         while (this.tasks.some(task => task.status !== 'done' && task.status !== 'unexecutable')) {
             this.tasks.forEach(task => {
-                if (task.status === 'pending' && this.canExecute(task)) {
+                if (task.status === 'pending' && this.canExecute(task) && !this.taskQueue.includes(task)) {
                     this.taskQueue.push(task)
                 }
             })
-
-
+        
             this.taskQueue.sort((a, b) => b.priority - a.priority)
-
+        
             console.log("Очередь Задач:", this.taskQueue.map(task => task.id))
-
-
+        
             for (let robot of this.robots) {
                 if (robot.currentTask === null && this.taskQueue.length > 0) {
                     const task = this.taskQueue.shift()
@@ -111,9 +109,10 @@ class Scheduler {
                     robot.idleTime += 1
                 }
             }
-
+        
             await new Promise(res => setTimeout(res, 1000))
         }
+        
 
         this.logToFile("Все задачи выполнены")
         this.logIdleTimes()
@@ -129,17 +128,18 @@ class Scheduler {
 
 
 const taskA = new Task('A', 3)
-const taskB = new Task('B', 2, [taskA])
-const taskC = new Task('C', 5, [taskA])
+const taskB = new Task('B', 2, [taskA], priority=1)
+const taskC = new Task('C', 5, [taskA], priority=2)
 const taskD = new Task('D', 1, [taskB, taskC])
 const taskE = new Task('E', 2, [taskD])
 
-const taskF = new Task('F', 4, [taskE])
-taskE.dependencies.push(taskF)
+const taskF = new Task('F', 4, [taskE]) // Создание зависимости F -> E
+taskE.dependencies.push(taskF) // Создание зависимости E -> F
 
 const tasks = [taskA, taskB, taskC, taskD, taskE, taskF]
 
-const robots = [new Robot(1), new Robot(2)]
+const robots = [new Robot(1)]
+// const robots = [new Robot(1), new Robot(2), new Robot(3)]
 
 const scheduler = new Scheduler(robots, tasks)
 
